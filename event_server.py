@@ -12,13 +12,14 @@ import bs4
 #import bridge
 import codecs
 import datetime
+import argparse
 
 from werkzeug.serving import WSGIRequestHandler
 
 base_path = os.getcwd() + '/example/'
 
-server_channel = 'asr'
-decode_control_channel = 'asr_control'
+server_channel = '89903%7Ew_648ydjdf6umf_5-bbbID-Robert%20Geislinger~text'
+decode_control_channel = '89903%7Ew_648ydjdf6umf_5-bbbID-Robert%20Geislinger~control'
 
 app = flask.Flask(__name__)
 app.secret_key = 'asdf'
@@ -27,7 +28,7 @@ app._static_files_root_folder_path = base_path
 
 CORS(app)
 
-red = redis.StrictRedis()
+red = redis.StrictRedis(host="ltbbb2")
 
 long_poll_timeout = 0.5
 long_poll_timeout_burst = 0.08
@@ -123,6 +124,11 @@ def send_fonts(path):
 # END static files
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--server', dest='redis_server', type=str, default='localhost')
+    args = parser.parse_args()
+    red = redis.StrictRedis(host=args.redis_server)
+
     print(' * Starting app with base path:',base_path)
 #    new_session_outfile()
     app.debug = True
