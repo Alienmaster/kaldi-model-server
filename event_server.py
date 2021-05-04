@@ -18,7 +18,7 @@ from werkzeug.serving import WSGIRequestHandler
 
 base_path = os.getcwd() + '/example/'
 
-server_channel = '89903%7Ew_648ydjdf6umf_5-bbbID-Robert%20Geislinger~text'
+server_channel = 'asr_channel'
 decode_control_channel = '89903%7Ew_648ydjdf6umf_5-bbbID-Robert%20Geislinger~control'
 
 app = flask.Flask(__name__)
@@ -36,14 +36,18 @@ long_poll_timeout_burst = 0.08
 #Send event to the event stream
 def event_stream():
     print("New connection to event_stream!")
-    pubsub = red.pubsub()
+    pubsub = red.pubsub(ignore_subscribe_messages=True)
     pubsub.subscribe(server_channel)
     yield b'hello'
     for message in pubsub.listen():
-        if not message['type'] == 'subscribe':
-            #print('New message:', message)
-            #print(type(message['data']))
-            yield b'data: %s\n\n' % message['data']
+        # print(message)
+        message = json.loads(message["data"].decode("UTF-8"))
+        if 'Event' in message and message['Event'] == 'LOADER_START':
+            pubsub.subscribe(message["Text-Channel"])
+            print("participant Added!")
+        # print('New message:', message)
+        # print(type(message['data']))
+        yield b'data: %s\n\n' % json.dumps(message).encode('utf-8')
 
 @app.route('/reset')
 def reset():
@@ -123,9 +127,17 @@ def send_fonts(path):
 
 # END static files
 
+def new_participants():
+    pubsub = red.pubsub()
+    message = pubsub.get_message(timeout=long_poll_timeout)
+    while(message != None):
+        yield message
+        message = pubsub.get_message(timeout=long_poll_timeout_burst)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--server', dest='redis_server', type=str, default='localhost')
+    parser.add_argument('-c', '--channel', dest='redis_channel', type=str, default='asr_channel')
     args = parser.parse_args()
     red = redis.StrictRedis(host=args.redis_server)
 
