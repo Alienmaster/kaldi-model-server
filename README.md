@@ -60,7 +60,7 @@ git clone https://github.com/uhh-lt/kaldi-model-server
 cd kaldi-model-server
 
 virtualenv -p python3 pykaldi_env
-source pykaldi_env/bin/activate
+source ./pykaldi_env/bin/activate
 ```
 
 Install Python3 pip dependencies:
